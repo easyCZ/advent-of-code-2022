@@ -12,6 +12,55 @@ import (
 func main() {
 	root := parse(os.Stdin)
 	fmt.Println(root)
+
+	biggerThan100000 := dirsBiggerThanX(root, 100000)
+	sum := 0
+	for _, n := range biggerThan100000 {
+		sum += n.Size()
+	}
+	fmt.Println("sum", sum)
+
+	currentSize := root.Size()
+
+	needed := 30000000
+	capacity := 70000000
+	freeNow := capacity - currentSize
+	stillNeed := needed - freeNow
+	// toFreeUpAtLeast := 70000000 + 30000000 - currentSize
+	fmt.Println("free up at least", stillNeed)
+
+	dirs := collectDirs(root)
+	for _, d := range dirs {
+		fmt.Println(fmt.Sprintf("dir: %s, size: %d", d.Name(), d.Size()))
+	}
+	var eligibleDirs []Node
+	for _, d := range dirs {
+		if d.Size() >= stillNeed {
+			eligibleDirs = append(eligibleDirs, d)
+		}
+	}
+
+	fmt.Println("eligible dir", eligibleDirs)
+
+	var eligibleDirsBigEnough []Node
+	for _, d := range eligibleDirs {
+		if d.Size() >= stillNeed {
+			eligibleDirsBigEnough = append(eligibleDirsBigEnough, d)
+		}
+	}
+
+	min := eligibleDirsBigEnough[0].Size()
+	minDir := eligibleDirsBigEnough[0]
+	for _, d := range eligibleDirsBigEnough {
+		s := d.Size()
+		if s < min {
+			min = s
+			minDir = d
+		}
+	}
+
+	fmt.Println("min dir", minDir.Size())
+
 }
 
 type CMD struct {
@@ -200,4 +249,32 @@ func mustParseInt(s string) int {
 	}
 
 	return int(n)
+}
+
+func dirsBiggerThanX(root Node, size int) []Node {
+	var nodes []Node
+	for _, c := range root.Children() {
+		if c.Type() != DirectoryType {
+			continue
+		}
+
+		if c.Size() < size {
+			nodes = append(nodes, c)
+		}
+
+		nodes = append(nodes, dirsBiggerThanX(c, size)...)
+	}
+	return nodes
+}
+
+func collectDirs(root Node) []Node {
+	var nodes []Node
+	for _, c := range root.Children() {
+		if c.Type() == DirectoryType {
+			nodes = append(nodes, c)
+			nodes = append(nodes, collectDirs(c)...)
+		}
+
+	}
+	return nodes
 }
