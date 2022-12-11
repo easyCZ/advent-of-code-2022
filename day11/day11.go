@@ -3,20 +3,41 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"sort"
+)
+
+var (
+	p = int64(2) * 7 * 13 * 3 * 19 * 17 * 11 * 5
+
+	//p = int64(23) * 19 * 13 * 17
 )
 
 func main() {
-	//monkeys := parse()
-	monkeys := parseTestMonkeys()
+	monkeys := parse()
+	//monkeys := parseTestMonkeys()
 	//fmt.Println(monkeys)
 
 	monkeys, inspections := PlayRounds(monkeys, 10000)
 
+	var vals []int
+	for _, ins := range inspections {
+		vals = append(vals, ins)
+	}
+
 	for i, m := range monkeys {
-		fmt.Println("Monkey", i)
-		fmt.Println(m.Items)
+		fmt.Println(i, m.Items)
 	}
 	fmt.Println(inspections)
+
+	sort.Ints(vals)
+	fmt.Println(vals)
+
+	fmt.Println("Max 2:", vals[len(vals)-1]*vals[len(vals)-2])
+
+	//for i, m := range monkeys {
+	//	fmt.Println(i, m.Items)
+	//}
+	//fmt.Println(inspections)
 }
 
 func PlayRounds(monkeys []*Monkey, n int) ([]*Monkey, map[int]int) {
@@ -35,6 +56,10 @@ func PlayRounds(monkeys []*Monkey, n int) ([]*Monkey, map[int]int) {
 		}
 
 		monkeys = mks
+		//for j, m := range monkeys {
+		//	fmt.Println(i, j, m.Items)
+		//}
+
 	}
 
 	return monkeys, inspectionsByMonkeyIdx
@@ -191,6 +216,8 @@ func (m *Monkey) Turn() []Throw {
 
 		// gets bored
 		//worryLevel = worryLevel.Div(worryLevel, big.NewInt(3))
+
+		worryLevel = worryLevel.Mod(worryLevel, big.NewInt(p))
 
 		throwTo := m.ThrowTo(worryLevel)
 		throws = append(throws, Throw{
